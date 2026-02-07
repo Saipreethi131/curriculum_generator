@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduGen - AI Curriculum Generator</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+</head>
+
+<body>
+
+    <nav>
+        <div class="logo">
+            <i class="ph-fill ph-graduation-cap"></i> EduGen
+        </div>
+        <div class="nav-links">
+            <a href="/" class="active">Home</a>
+            <a href="#generator" onclick="document.querySelector('.generator-container').scrollIntoView({behavior: 'smooth'}); return false;">Generator</a>
+        </div>
+    </nav>
+
+    <!-- LANDING HERO -->
+    <header class="hero-section">
+        <h1 class="hero-title">From Learning Goals to Structured Curriculum</h1>
+        <p class="hero-subtitle">AI-Powered Curriculum Generation in Minutes</p>
+
+        <div class="feature-cards">
+            <div class="metric-card">
+                <div class="metric-icon">⚡</div>
+                <div class="metric-number">&lt;30s</div>
+                <div class="metric-label">Generation Time</div>
+                <p class="metric-desc">AI-powered curriculum in seconds</p>
+            </div>
+            <div class="metric-card">
+                <div class="metric-icon">🎓</div>
+                <div class="metric-number">1-8</div>
+                <div class="metric-label">Semester Range</div>
+                <p class="metric-desc">Flexible program durations</p>
+            </div>
+            <div class="metric-card">
+                <div class="metric-icon">📚</div>
+                <div class="metric-number">100%</div>
+                <div class="metric-label">Project-Based</div>
+                <p class="metric-desc">Real-world applications built-in</p>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN FORM INPUT -->
+    <div class="generator-container" id="generator">
+
+        <!-- Left Side: Form -->
+        <div class="main-card">
+            <h2 style="margin-bottom: 2rem;">📝 Create Your Curriculum</h2>
+
+            <form id="generator-form" action="/generate_structure" method="POST">
+
+                <div class="form-group">
+                    <label class="form-label">Skill / Subject</label>
+                    <input type="text" class="form-control" name="program"
+                        placeholder="e.g. Machine Learning, Web Development" required>
+                    <small style="color:#9ca3af;">The main skill or technology you want to teach.</small>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Education Level</label>
+                    <select class="form-control" name="level">
+                        <option value="Undergraduate">Undergraduate / Bachelors</option>
+                        <option value="Masters">Masters / Degree</option>
+                        <option value="Diploma">Diploma / Certification</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Number of Semesters</label>
+                    <select class="form-control" name="semesters">
+                        <option value="1">1 Semester (Fast Track)</option>
+                        <option value="2">2 Semesters</option>
+                        <option value="4" selected>4 Semesters</option>
+                        <option value="8">8 Semesters</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Weekly Hours (Optional)</label>
+                    <input type="text" class="form-control" name="hours" placeholder="e.g. 20-25">
+                </div>
+
+                <div style="display:flex; gap: 1rem;">
+                    <button type="submit" id="generate-btn" class="btn-primary">✨ Generate Curriculum</button>
+                    <button type="reset" class="btn-secondary">Clear</button>
+                </div>
+
+                <p id="loading-msg"
+                    style="display:none; text-align: center; margin-top: 1.25rem; color: #475569; font-weight: 600; font-size: 0.95rem;">
+                    <i class="ph ph-spinner-gap" style="animation: spin 1s infinite linear;"></i>
+                    Generating Structure... This may take 30s.
+                </p>
+
+            </form>
+        </div>
+
+        <!-- Right Side: Visual -->
+        <div class="preview-card">
+            <div style="font-size: 4rem; margin-bottom: 1rem;">🎓</div>
+            <h3>Professional-Grade Curriculum</h3>
+            <p style="color: rgba(255, 255, 255, 0.9); font-size: 0.9rem; margin-bottom: 2rem;">Create industry-aligned, certification-ready curricula with AI-powered intelligence.</p>
+            <ul style="list-style: none; padding: 0; color: rgba(255, 255, 255, 0.95); font-size: 0.9rem; text-align: left;">
+                <li style="margin-bottom: 0.5rem;">✓ Certification Pathway Mapping</li>
+                <li style="margin-bottom: 0.5rem;">✓ Project-Based Assignments</li>
+                <li style="margin-bottom: 0.5rem;">✓ Industry-Standard Credits</li>
+                <li style="margin-bottom: 0.5rem;">✓ Multi-Platform Export</li>
+            </ul>
+        </div>
+
+    </div>
+
+    <!-- SCRIPT -->
+    <script>
+        document.getElementById('generator-form').addEventListener('submit', function () {
+            const btn = document.getElementById('generate-btn');
+            const msg = document.getElementById('loading-msg');
+            btn.disabled = true;
+            btn.style.opacity = '0.7';
+            msg.style.display = 'block';
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Curriculum Result</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+
+<body>
+
+    <nav>
+        <div class="logo">
+            <i class="ph-fill ph-graduation-cap"></i> EduGen
+        </div>
+        <div class="nav-links">
+            <a href="/download_pdf" target="_blank" style="color: #475569; font-weight: 700; display: flex; align-items: center; gap: 0.5rem; background: #f1f5f9; padding: 0.6rem 1.25rem; border-radius: 10px; transition: all 0.3s ease;">
+                <i class="ph ph-download-simple"></i> Download Full PDF
+            </a>
+        </div>
+    </nav>
+
+    <header class="result-header">
+        <div style="max-width: 1200px; margin: 0 auto;">
+            <h1 style="margin: 0;">{{ nav_data.program if nav_data else 'Generation Failed' }}</h1>
+            <p style="opacity: 0.8; margin-top: 0.5rem;">Semester-wise curriculum structure</p>
+        </div>
+    </header>
+
+    <div class="result-container">
+        {% if error %}
+        <div style="background: #fee2e2; color: #b91c1c; padding: 1rem; border-radius: 8px;">
+            <strong>Error:</strong> {{ error }}
+        </div>
+        {% elif nav_data %}
+
+        {% for sem in nav_data.semesters %}
+        <div class="semester-section">
+            <div class="semester-header">
+                <i class="ph-fill ph-books" style="margin-right: 0.5rem;"></i>
+                Semester {{ sem.semester }}: {{ sem.subjects|length }} Courses
+            </div>
+
+            <div class="subject-grid">
+                {% for subj in sem.subjects %}
+                <div class="subject-card" onclick="openSyllabus('{{ subj.name }}', '{{ nav_data.program }}')">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <span class="subject-code">{{ subj.code }}</span>
+                        <span style="font-size: 1.2rem; color: #d1d5db;">➔</span>
+                    </div>
+
+                    <div class="subject-title">{{ subj.name }}</div>
+
+                    <div class="subject-meta">
+                        <span class="meta-item"><i class="ph-fill ph-certificate"></i> {{ subj.credits }} Credits</span>
+                        <span class="meta-item"><i class="ph-fill ph-clock"></i> {{ subj.hours_per_week }}h/week</span>
+                    </div>
+
+                    <p style="font-size: 0.85rem; color: #6b7280; margin-bottom: 1rem; line-height: 1.5;">
+                        {{ subj.description }}
+                    </p>
+
+                    <div class="topic-tags">
+                        <span
+                            style="font-size: 0.75rem; font-weight: 600; color: #9ca3af; margin-right: 4px;">Topics:</span>
+                        {% for topic in subj.topics[:2] %}
+                        <span class="topic-tag">{{ topic }}</span>
+                        {% endfor %}
+                        {% if subj.topics|length > 2 %}
+                        <span class="topic-tag">+{{ subj.topics|length - 2 }} more</span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+
+        {% endif %}
+    </div>
+
+    <!-- DRAWER FOR SYLLABUS -->
+    <div class="modal-backdrop" id="backdrop" onclick="closeSyllabus()"></div>
+    <div class="syllabus-modal" id="drawer">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 2px solid #e2e8f0;">
+            <h2 id="drawer-title" style="margin: 0; color: #475569; font-weight: 800; font-size: 1.5rem; letter-spacing: -0.5px;">Subject Title</h2>
+            <button onclick="closeSyllabus()"
+                style="background: #f1f5f9; border: none; font-size: 1.75rem; cursor: pointer; width: 36px; height: 36px; border-radius: 8px; color: #475569; transition: all 0.3s ease;">&times;</button>
+        </div>
+        
+        <div style="margin-bottom: 1.5rem;">
+            <button onclick="downloadCourseSyllabus()" id="download-course-btn"
+                style="background: #475569; color: white; border: none; padding: 0.75rem 1.25rem; border-radius: 10px; cursor: pointer; font-weight: 700; font-size: 0.95rem; display: none; transition: all 0.3s ease; box-shadow: 0 2px 4px rgba(71, 85, 105, 0.3);">
+                <i class="ph ph-download-simple"></i> Download Course Syllabus
+            </button>
+        </div>
+
+        <div id="drawer-loader" class="loading-spinner hidden"></div>
+        <div id="drawer-content"></div>
+    </div>
+
+    <script>
+        const drawer = document.getElementById('drawer');
+        const backdrop = document.getElementById('backdrop');
+        const drawerContent = document.getElementById('drawer-content');
+        const drawerLoader = document.getElementById('drawer-loader');
+        const drawerTitle = document.getElementById('drawer-title');
+        
+        let currentSyllabusContent = '';
+        let currentSubjectName = '';
+
+        function formatJsonSyllabus(data) {
+            let md = '';
+            if (data.objective) md += `## 🎯 Course Objective\n${data.objective}\n\n`;
+            
+            // Add certifications if available
+            if (data.certifications && data.certifications.length > 0) {
+                md += `## 🏆 Industry Certifications\n`;
+                data.certifications.forEach(cert => {
+                    md += `- **${cert}**\n`;
+                });
+                md += `\n`;
+            }
+            
+            if (data.modules) {
+                md += `## 📋 Course Modules\n\n`;
+                data.modules.forEach(m => {
+                    md += `### ${m.unit || m.name || 'Module'}\n`;
+                    (m.topics || []).forEach(t => {
+                        md += `- **${typeof t === 'string' ? t : t.name || t}**\n`;
+                    });
+                    md += '\n';
+                });
+            }
+            if (data.reading) {
+                md += `## 📖 Recommended Reading\n`;
+                md += `- **Book:** ${data.reading.book || data.reading}\n\n`;
+            }
+            if (data.assessment) md += `## ✅ Assessment\n${data.assessment}\n`;
+            
+            // Add capstone project ideas if available
+            if (data.projects && data.projects.length > 0) {
+                md += `\n## 💡 Capstone Project Ideas\n`;
+                data.projects.forEach(project => {
+                    md += `- **${project}**\n`;
+                });
+                md += `\n`;
+            }
+            
+            return md || JSON.stringify(data, null, 2);
+        }
+
+        async function openSyllabus(subjectName, programName) {
+            // Open Drawer
+            drawer.classList.add('open');
+            backdrop.classList.add('open');
+            document.body.style.overflow = 'hidden'; // Stop scrolling
+
+            // Set Loading State
+            drawerTitle.textContent = subjectName;
+            currentSubjectName = subjectName;
+            drawerContent.innerHTML = '';
+            drawerLoader.style.display = 'block';
+            document.getElementById('download-course-btn').style.display = 'none';
+
+            try {
+                const response = await fetch('/generate_subject_details', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        subject: subjectName,
+                        program: programName
+                    })
+                });
+
+                const data = await response.json();
+
+                drawerLoader.style.display = 'none';
+                document.getElementById('download-course-btn').style.display = 'inline-block';
+                
+                // Check if content is JSON and format it, otherwise render as Markdown
+                let content = data.content;
+                try {
+                    const jsonData = JSON.parse(content);
+                    // Convert JSON syllabus to formatted Markdown
+                    content = formatJsonSyllabus(jsonData);
+                } catch(e) {
+                    // Not JSON, treat as Markdown (expected path)
+                }
+                currentSyllabusContent = content;
+                drawerContent.innerHTML = marked.parse(content);
+
+            } catch (err) {
+                drawerContent.innerHTML = `<p style="color:red">Error: ${err}</p>`;
+            }
+        }
+
+        function closeSyllabus() {
+            drawer.classList.remove('open');
+            backdrop.classList.remove('open');
+            document.body.style.overflow = 'auto';
+        }
+        
+        async function downloadCourseSyllabus() {
+            if (!currentSyllabusContent || !currentSubjectName) return;
+            
+            try {
+                const response = await fetch('/download_course_pdf', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        subject: currentSubjectName,
+                        content: currentSyllabusContent
+                    })
+                });
+                
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `${currentSubjectName.replace(/[^a-z0-9]/gi, '_')}_syllabus.pdf`;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                }
+            } catch (error) {
+                console.error('Download failed:', error);
+                alert('Failed to download PDF. Please try again.');
+            }
+        }
+    </script>
+</body>
+
+</html>
