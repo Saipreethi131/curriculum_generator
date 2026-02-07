@@ -41,13 +41,13 @@ Detailed syllabi with 5 units, industry certifications, capstone projects, and r
 ### **Backend**
 - **Python 3.8+** - Core application language
 - **Flask 3.0+** - Web framework
-- **Groq Cloud API** - Primary LLM inference (Claude Sonnet 4.5)
+- **Groq Cloud API** - Primary LLM inference (llama-3.1-8b-instant)
 - **Ollama** - Local fallback inference engine (qwen2.5:1.5b)
 - **ReportLab** - Professional PDF generation
 
 ### **AI/LLM**
 - **Groq LPU Hardware** - 500+ tokens/sec throughput
-- **Claude Sonnet 4.5** - Primary model via Groq API
+- **llama-3.1-8b-instant** - Primary model via Groq API
 - **Temperature: 0.1** - Deterministic, consistent output
 - **JSON Mode** - Structured curriculum generation
 
@@ -176,7 +176,7 @@ Server starts at: **http://127.0.0.1:5000**
 | Metric | Value | Implementation |
 |--------|-------|----------------|
 | **Generation Time** | <30s | Groq LPU hardware (500+ tokens/sec) |
-| **Token Throughput** | 500+ tok/s | Claude Sonnet 4.5 via Groq |
+| **Token Throughput** | 500+ tok/s | llama-3.1-8b-instant via Groq |
 | **Accuracy** | 95%+ | Temperature 0.1, structured prompts |
 | **Concurrent Users** | 10+ | Flask with efficient caching |
 | **PDF Generation** | <2s | ReportLab optimization |
@@ -208,7 +208,7 @@ Server starts at: **http://127.0.0.1:5000**
 ┌───────────────────┐  ┌───────────────────┐
 │   Groq Client     │  │  Ollama Client    │
 │  (Primary - Fast) │  │   (Fallback)      │
-│ Claude Sonnet 4.5 │  │ qwen2.5:1.5b      │
+│llama-3.1-8b-instant│ │ qwen2.5:1.5b      │
 │   1-3s response   │  │  30-60s response  │
 └─────────┬─────────┘  └─────────┬─────────┘
           │                      │
@@ -391,7 +391,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 👏 **Acknowledgments**
 
 - **Groq** - For lightning-fast LLM inference
-- **Anthropic** - For Claude Sonnet 4.5 model
+- **Meta AI** - For llama-3.1-8b-instant model
 - **Ollama** - For local AI model serving
 - **ReportLab** - For PDF generation
 - **Phosphor Icons** - For beautiful icons
