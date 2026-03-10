@@ -78,6 +78,7 @@
                     <div class="sr-spine"></div>
 
                     {% for sem in nav_data.semesters %}
+                    {% set sem_index = loop.index0 %}
                     <!-- Semester phase -->
                     <div class="sr-phase" style="--phase-delay: {{ loop.index0 * 0.12 }}s">
                         <div class="sr-phase-header">
@@ -92,7 +93,7 @@
 
                         <div class="sr-track">
                             {% for subj in sem.subjects %}
-                            <div class="sr-card" onclick="openSyllabus('{{ subj.name }}', '{{ nav_data.program }}')" style="--card-delay: {{ (loop.index0 * 0.06) + (loop.parent.loop.index0 * 0.12) }}s">
+                            <div class="sr-card" onclick="openSyllabus('{{ subj.name }}', '{{ nav_data.program }}')" style="--card-delay: {{ (loop.index0 * 0.06) + (sem_index * 0.12) }}s">
                                 <div class="sr-card-accent"></div>
                                 <div class="sr-card-body">
                                     <div class="sr-card-head">
