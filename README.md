@@ -2,6 +2,10 @@
 
 A full-stack web application that automates academic curriculum design using large language models. Given a subject, education level, and program duration, EduGen generates structured, semester-wise curricula complete with course syllabi, industry certifications, and capstone projects.
 
+## Demo
+
+https://1drv.ms/v/c/c016e0a172c25474/IQD6TgG63LQ5RLaW5TCEXD5xATYafsq899Wockml5KdowlY?e=Y87SBA
+
 ## Architecture
 
 ```
