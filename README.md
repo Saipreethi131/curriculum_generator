@@ -4,7 +4,7 @@ A full-stack web application that automates academic curriculum design using lar
 
 ## Demo
 
-https://1drv.ms/v/c/c016e0a172c25474/IQD6TgG63LQ5RLaW5TCEXD5xATYafsq899Wockml5KdowlY?e=Y87SBA
+https://github.com/user-attachments/assets/f7a39e42-4de0-4482-a500-375bc16a09a5
 
 ## Architecture
 
