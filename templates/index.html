@@ -16,9 +16,13 @@
         <div class="logo">
             <i class="ph-fill ph-graduation-cap"></i> EduGen
         </div>
-        <div class="nav-links">
-            <a href="/" class="active">Home</a>
-            <a href="#generator" onclick="document.querySelector('.generator-container').scrollIntoView({behavior: 'smooth'}); return false;">Generator</a>
+        <div class="app-topbar-actions">
+            {% if current_user %}
+            <span class="user-chip"><i class="ph ph-user-circle"></i> {{ current_user.username }}</span>
+            <form method="POST" action="/logout" class="logout-form">
+                <button type="submit" class="btn-secondary topbar-logout-btn">Logout</button>
+            </form>
+            {% endif %}
         </div>
     </nav>
 
@@ -54,7 +58,30 @@
 
         <!-- Left Side: Form -->
         <div class="main-card">
-            <h2 style="margin-bottom: 2rem;">📝 Create Your Curriculum</h2>
+            <div class="form-header-row">
+                <h2>📝 Create Your Curriculum</h2>
+                <div class="form-header-actions">
+                    <button type="button" class="btn-secondary btn-history-toggle" onclick="toggleHistoryPanel()">
+                        <i class="ph ph-clock-counter-clockwise"></i> History
+                    </button>
+                    <button type="button" class="btn-secondary" onclick="openCustomizationPanel()">
+                        <i class="ph ph-sliders-horizontal"></i> Advanced Settings
+                    </button>
+                </div>
+            </div>
+
+            <!-- History Panel (inline, toggled) -->
+            <div id="history-panel" class="history-panel" style="display: none;">
+                <div class="history-panel-header">
+                    <h3><i class="ph ph-clock-counter-clockwise"></i> Recent Curricula</h3>
+                    <button class="history-close-btn" onclick="toggleHistoryPanel()">&times;</button>
+                </div>
+                <div id="history-list" class="history-list">
+                    <div class="history-loading">
+                        <i class="ph ph-spinner-gap loading-icon"></i> Loading history...
+                    </div>
+                </div>
+            </div>
 
             <form id="generator-form" action="/generate_structure" method="POST">
 
@@ -62,12 +89,12 @@
                     <label class="form-label">Skill / Subject</label>
                     <input type="text" class="form-control" name="program"
                         placeholder="e.g. Machine Learning, Web Development" required>
-                    <small style="color:#9ca3af;">The main skill or technology you want to teach.</small>
+                    <small class="form-help">The main skill or technology you want to teach.</small>
                 </div>
 
                 <div class="form-group">
                     <label class="form-label">Education Level</label>
-                    <select class="form-control" name="level">
+                    <select class="form-control" name="level" id="level-select" onchange="updateSemesterOptions()">
                         <option value="Undergraduate">Undergraduate / Bachelors</option>
                         <option value="Masters">Masters / Degree</option>
                         <option value="Diploma">Diploma / Certification</option>
@@ -76,12 +103,22 @@
 
                 <div class="form-group">
                     <label class="form-label">Number of Semesters</label>
-                    <select class="form-control" name="semesters">
-                        <option value="1">1 Semester (Fast Track)</option>
-                        <option value="2">2 Semesters</option>
+                    <select class="form-control" name="semesters" id="semesters-select">
                         <option value="4" selected>4 Semesters</option>
                         <option value="8">8 Semesters</option>
                     </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Courses Per Semester</label>
+                    <select class="form-control" name="courses_per_sem">
+                        <option value="2">2 Courses</option>
+                        <option value="3" selected>3 Courses</option>
+                        <option value="4">4 Courses</option>
+                        <option value="5">5 Courses</option>
+                        <option value="6">6 Courses</option>
+                    </select>
+                    <small class="form-help">Number of courses in each semester</small>
                 </div>
 
                 <div class="form-group">
@@ -89,14 +126,13 @@
                     <input type="text" class="form-control" name="hours" placeholder="e.g. 20-25">
                 </div>
 
-                <div style="display:flex; gap: 1rem;">
+                <div class="form-actions">
                     <button type="submit" id="generate-btn" class="btn-primary">✨ Generate Curriculum</button>
                     <button type="reset" class="btn-secondary">Clear</button>
                 </div>
 
-                <p id="loading-msg"
-                    style="display:none; text-align: center; margin-top: 1.25rem; color: #475569; font-weight: 600; font-size: 0.95rem;">
-                    <i class="ph ph-spinner-gap" style="animation: spin 1s infinite linear;"></i>
+                <p id="loading-msg" class="loading-msg">
+                    <i class="ph ph-spinner-gap loading-icon"></i>
                     Generating Structure... This may take 30s.
                 </p>
 
@@ -105,28 +141,605 @@
 
         <!-- Right Side: Visual -->
         <div class="preview-card">
-            <div style="font-size: 4rem; margin-bottom: 1rem;">🎓</div>
+            <div class="preview-icon">🎓</div>
             <h3>Professional-Grade Curriculum</h3>
-            <p style="color: rgba(255, 255, 255, 0.9); font-size: 0.9rem; margin-bottom: 2rem;">Create industry-aligned, certification-ready curricula with AI-powered intelligence.</p>
-            <ul style="list-style: none; padding: 0; color: rgba(255, 255, 255, 0.95); font-size: 0.9rem; text-align: left;">
-                <li style="margin-bottom: 0.5rem;">✓ Certification Pathway Mapping</li>
-                <li style="margin-bottom: 0.5rem;">✓ Project-Based Assignments</li>
-                <li style="margin-bottom: 0.5rem;">✓ Industry-Standard Credits</li>
-                <li style="margin-bottom: 0.5rem;">✓ Multi-Platform Export</li>
+            <p class="preview-lead">Create industry-aligned,
+                certification-ready curricula with AI-powered intelligence.</p>
+            <ul class="preview-list">
+                <li>✓ Certification Pathway Mapping</li>
+                <li>✓ Project-Based Assignments</li>
+                <li>✓ Industry-Standard Credits</li>
+                <li>✓ Multi-Platform Export</li>
             </ul>
         </div>
 
     </div>
 
+    <!-- CUSTOMIZATION PANEL -->
+    <div id="customization-panel" class="customization-panel">
+        <div class="panel-content">
+            <div class="panel-header">
+                <h3><i class="ph ph-gear"></i> Advanced Settings</h3>
+                <button onclick="closeCustomizationPanel()" class="close-btn">&times;</button>
+            </div>
+
+            <div class="panel-body">
+                <!-- Profile Management -->
+                <div class="setting-section">
+                    <h4>Profile Management</h4>
+                    <div class="profile-controls">
+                        <select id="profile-selector" onchange="loadSelectedProfile()">
+                            <option value="">Select a profile...</option>
+                        </select>
+                        <button onclick="saveCurrentProfile()" class="btn-small">Save</button>
+                        <button onclick="deleteSelectedProfile()" class="btn-small btn-danger">Delete</button>
+                    </div>
+                </div>
+
+                <!-- Advanced Curriculum Settings -->
+                <div class="setting-section">
+                    <h4>Curriculum Preferences</h4>
+
+                    <div class="setting-group">
+                        <label>Academic System:</label>
+                        <select id="academic-system">
+                            <option value="semester">Semester System</option>
+                            <option value="quarter">Quarter System</option>
+                            <option value="trimester">Trimester System</option>
+                        </select>
+                    </div>
+
+                    <div class="setting-group">
+                        <label>Difficulty Level:</label>
+                        <select id="difficulty-level">
+                            <option value="beginner">Beginner Friendly</option>
+                            <option value="intermediate" selected>Intermediate</option>
+                            <option value="advanced">Advanced</option>
+                            <option value="expert">Expert Level</option>
+                        </select>
+                    </div>
+
+                    <div class="setting-group">
+                        <label>Learning Style:</label>
+                        <select id="learning-style">
+                            <option value="theoretical">Theory-Focused</option>
+                            <option value="practical" selected>Hands-On Practical</option>
+                            <option value="balanced">Balanced Approach</option>
+                            <option value="project">Project-Based</option>
+                        </select>
+                    </div>
+
+                    <div class="setting-group">
+                        <label>Prerequisites Handling:</label>
+                        <select id="prerequisites">
+                            <option value="include">Include Prerequisites</option>
+                            <option value="assume" selected>Assume Basic Knowledge</option>
+                            <option value="minimal">Minimal Prerequisites</option>
+                        </select>
+                    </div>
+
+                    <div class="setting-group">
+                        <label>Industry Certification Focus:</label>
+                        <div class="checkbox-group">
+                            <label><input type="checkbox" id="cert-focus" checked> Include certification
+                                preparation</label>
+                            <label><input type="checkbox" id="project-focus" checked> Emphasize real-world
+                                projects</label>
+                            <label><input type="checkbox" id="internship-focus"> Include internship guidance</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel-footer">
+                <button onclick="applySettings()" class="btn-primary">Apply Settings</button>
+                <button onclick="resetToDefaults()" class="btn-secondary">Reset to Defaults</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CHATBOT -->
+    <div id="chatbot-container" class="chatbot-container">
+        <div id="chatbot-toggle" class="chatbot-toggle" onclick="toggleChatbot()">
+            <i class="ph ph-chats-circle"></i>
+            <span class="chat-notification" id="chat-notification"></span>
+        </div>
+
+        <div id="chatbot-window" class="chatbot-window">
+            <div class="chatbot-header">
+                <div class="chatbot-title">
+                    <i class="ph ph-robot"></i>
+                    <span>EduGen Assistant</span>
+                </div>
+                <button onclick="toggleChatbot()" class="chatbot-close">&times;</button>
+            </div>
+
+            <div id="chatbot-messages" class="chatbot-messages">
+                <div class="message bot-message">
+                    <div class="message-content">
+                        Hi! I'm your curriculum assistant. I can help you with:
+                        <ul>
+                            <li>Course recommendations</li>
+                            <li>Learning path guidance</li>
+                            <li>Career advice</li>
+                            <li>Technical explanations</li>
+                        </ul>
+                        What would you like to know?
+                    </div>
+                </div>
+            </div>
+
+            <div class="chatbot-input-area">
+                <input type="text" id="chatbot-input" placeholder="Ask me anything about curriculum design..."
+                    onkeypress="if(event.key==='Enter') sendMessage()">
+                <button onclick="sendMessage()" class="send-btn">
+                    <i class="ph ph-paper-plane-tilt"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- SCRIPT -->
     <script>
-        document.getElementById('generator-form').addEventListener('submit', function () {
-            const btn = document.getElementById('generate-btn');
-            const msg = document.getElementById('loading-msg');
+        const form = document.getElementById('generator-form');
+        const btn = document.getElementById('generate-btn');
+        const msg = document.getElementById('loading-msg');
+
+        // Reset form state when page loads or when navigating back
+        function resetFormState() {
+            btn.disabled = false;
+            btn.style.opacity = '1';
+            msg.style.display = 'none';
+        }
+
+        // Reset on page load
+        window.addEventListener('load', function() {
+            resetFormState();
+            updateSemesterOptions();
+        });
+
+        // Dynamic semester options based on education level
+        function updateSemesterOptions() {
+            const level = document.getElementById('level-select').value;
+            const semSelect = document.getElementById('semesters-select');
+            const options = {
+                'Undergraduate': [{v:'4',t:'4 Semesters'},{v:'8',t:'8 Semesters'}],
+                'Masters':       [{v:'2',t:'2 Semesters'},{v:'4',t:'4 Semesters'}],
+                'Diploma':       [{v:'1',t:'1 Semester (Fast Track)'}]
+            };
+            const opts = options[level] || options['Undergraduate'];
+            semSelect.innerHTML = opts.map((o,i) => 
+                `<option value="${o.v}"${i===0?' selected':''}>${o.t}</option>`
+            ).join('');
+        }
+
+        // Reset when navigating back with browser buttons
+        window.addEventListener('pageshow', function (event) {
+            if (event.persisted) {
+                // Page was loaded from cache (back button)
+                resetFormState();
+            }
+        });
+
+        // Handle form submission
+        form.addEventListener('submit', function () {
+            // Apply current settings to form data
+            applySettingsToForm();
+
             btn.disabled = true;
             btn.style.opacity = '0.7';
             msg.style.display = 'block';
         });
+
+        // Customization Panel Functions
+        function openCustomizationPanel() {
+            document.getElementById('customization-panel').style.display = 'block';
+            loadSavedProfiles();
+        }
+
+        function closeCustomizationPanel() {
+            document.getElementById('customization-panel').style.display = 'none';
+        }
+
+        function loadSavedProfiles() {
+            fetch('/get_profiles')
+                .then(response => response.json())
+                .then(data => {
+                    const selector = document.getElementById('profile-selector');
+                    selector.innerHTML = '<option value="">Select a profile...</option>';
+
+                    if (data.success && data.profiles.length > 0) {
+                        data.profiles.forEach(profileName => {
+                            const option = document.createElement('option');
+                            option.value = profileName;
+                            option.textContent = profileName;
+                            selector.appendChild(option);
+                        });
+                    }
+                })
+                .catch(error => console.error('Error loading profiles:', error));
+        }
+
+        function loadSelectedProfile() {
+            const profileName = document.getElementById('profile-selector').value;
+            if (!profileName) return;
+
+            fetch(`/load_profile/${profileName}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Load settings into the customization panel
+                        const settings = data.settings;
+                        document.getElementById('academic-system').value = settings.academicSystem || 'semester';
+                        document.getElementById('difficulty-level').value = settings.difficultyLevel || 'intermediate';
+                        document.getElementById('learning-style').value = settings.learningStyle || 'practical';
+                        document.getElementById('prerequisites').value = settings.prerequisites || 'assume';
+                        document.getElementById('cert-focus').checked = settings.certFocus !== false;
+                        document.getElementById('project-focus').checked = settings.projectFocus !== false;
+                        document.getElementById('internship-focus').checked = settings.internshipFocus === true;
+
+                        showNotification(`Profile "${profileName}" loaded successfully`);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading profile:', error);
+                    showNotification('Failed to load profile', 'error');
+                });
+        }
+
+        function saveCurrentProfile() {
+            const profileName = prompt('Enter profile name:');
+            if (!profileName) return;
+
+            const settings = {
+                academicSystem: document.getElementById('academic-system').value,
+                difficultyLevel: document.getElementById('difficulty-level').value,
+                learningStyle: document.getElementById('learning-style').value,
+                prerequisites: document.getElementById('prerequisites').value,
+                certFocus: document.getElementById('cert-focus').checked,
+                projectFocus: document.getElementById('project-focus').checked,
+                internshipFocus: document.getElementById('internship-focus').checked
+            };
+
+            fetch('/save_profile', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ profile_name: profileName, settings: settings })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showNotification(data.message);
+                        loadSavedProfiles();
+                    } else {
+                        showNotification(data.error, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error saving profile:', error);
+                    showNotification('Failed to save profile', 'error');
+                });
+        }
+
+        function deleteSelectedProfile() {
+            const profileName = document.getElementById('profile-selector').value;
+            if (!profileName) {
+                showNotification('Please select a profile to delete', 'error');
+                return;
+            }
+
+            if (!confirm(`Delete profile "${profileName}"?`)) return;
+
+            fetch(`/delete_profile/${profileName}`, { method: 'DELETE' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showNotification(data.message);
+                        loadSavedProfiles();
+                    } else {
+                        showNotification(data.error, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error deleting profile:', error);
+                    showNotification('Failed to delete profile', 'error');
+                });
+        }
+
+        function applySettings() {
+            showNotification('Settings applied! They will be used in the next curriculum generation.');
+            closeCustomizationPanel();
+        }
+
+        function applySettingsToForm() {
+            // Add hidden inputs to form with current settings
+            const settingsData = {
+                academicSystem: document.getElementById('academic-system').value,
+                difficultyLevel: document.getElementById('difficulty-level').value,
+                learningStyle: document.getElementById('learning-style').value,
+                prerequisites: document.getElementById('prerequisites').value,
+                certFocus: document.getElementById('cert-focus').checked,
+                projectFocus: document.getElementById('project-focus').checked,
+                internshipFocus: document.getElementById('internship-focus').checked
+            };
+
+            // Add hidden input with settings JSON
+            const hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.name = 'custom_settings';
+            hiddenInput.value = JSON.stringify(settingsData);
+            form.appendChild(hiddenInput);
+        }
+
+        function resetToDefaults() {
+            document.getElementById('academic-system').value = 'semester';
+            document.getElementById('difficulty-level').value = 'intermediate';
+            document.getElementById('learning-style').value = 'practical';
+            document.getElementById('prerequisites').value = 'assume';
+            document.getElementById('cert-focus').checked = true;
+            document.getElementById('project-focus').checked = true;
+            document.getElementById('internship-focus').checked = false;
+            showNotification('Settings reset to defaults');
+        }
+
+        // Chatbot Functions
+        let chatbotOpen = false;
+        let messageHistory = [];
+
+        function toggleChatbot() {
+            const chatbotWindow = document.getElementById('chatbot-window');
+            const chatbotToggle = document.getElementById('chatbot-toggle');
+            const messagesContainer = document.getElementById('chatbot-messages');
+
+            chatbotOpen = !chatbotOpen;
+
+            if (chatbotOpen) {
+                chatbotWindow.style.display = 'flex';
+                chatbotToggle.style.display = 'none';
+                document.getElementById('chatbot-input').focus();
+
+                // Scroll to bottom when opening
+                setTimeout(() => {
+                    scrollChatToBottom();
+                }, 100);
+            } else {
+                chatbotWindow.style.display = 'none';
+                chatbotToggle.style.display = 'flex';
+            }
+        }
+
+        function scrollChatToBottom() {
+            const messagesContainer = document.getElementById('chatbot-messages');
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('chatbot-input');
+            const message = input.value.trim();
+
+            if (!message) return;
+
+            // Add user message to chat
+            addMessageToChat(message, 'user');
+            input.value = '';
+
+            // Show typing indicator
+            showTypingIndicator();
+
+            // Get current form context including advanced settings
+            const context = {
+                program: document.querySelector('input[name="program"]').value,
+                level: document.querySelector('select[name="level"]').value,
+                custom_settings: {
+                    academicSystem: document.getElementById('academic-system').value,
+                    difficultyLevel: document.getElementById('difficulty-level').value,
+                    learningStyle: document.getElementById('learning-style').value,
+                    prerequisites: document.getElementById('prerequisites').value
+                }
+            };
+
+            // Send to backend
+            fetch('/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: message, context: context })
+            })
+                .then(response => {
+                    // Handle both successful and error responses
+                    return response.json().then(data => ({
+                        ok: response.ok,
+                        status: response.status,
+                        data: data
+                    }));
+                })
+                .then(({ok, status, data}) => {
+                    hideTypingIndicator();
+                    
+                    if (ok && data.response) {
+                        // Success case
+                        addMessageToChat(data.response, 'bot');
+                    } else if (data.response) {
+                        // Error with fallback response (503 case)
+                        addMessageToChat(data.response, 'bot');
+                        console.warn('AI service issue:', data.details || data.error);
+                    } else {
+                        // Generic error
+                        const errorMsg = data.error || 'Sorry, I encountered an error. Please try again.';
+                        addMessageToChat(errorMsg, 'bot');
+                        if (data.details) {
+                            console.error('Chat error details:', data.details);
+                        }
+                    }
+                })
+                .catch(error => {
+                    hideTypingIndicator();
+                    console.error('Chat connection error:', error);
+                    addMessageToChat('Sorry, I\'m having trouble connecting to the server. Please check your connection and try again.', 'bot');
+                });
+        }
+
+        function addMessageToChat(message, sender) {
+            const messagesContainer = document.getElementById('chatbot-messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}-message`;
+
+            // Format message with line breaks and basic markdown
+            let formattedMessage = message
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')  // Bold
+                .replace(/###\s+(.*?)\n/g, '<h4>$1</h4>')  // Headings
+                .replace(/\n/g, '<br>')  // Line breaks
+                .replace(/•/g, '&bull;');  // Bullet points
+
+            messageDiv.innerHTML = `
+                <div class="message-content">${formattedMessage}</div>
+            `;
+
+            messagesContainer.appendChild(messageDiv);
+
+            // Scroll to bottom immediately
+            requestAnimationFrame(() => {
+                scrollChatToBottom();
+            });
+        }
+
+        function showTypingIndicator() {
+            const messagesContainer = document.getElementById('chatbot-messages');
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'message bot-message typing-indicator';
+            typingDiv.id = 'typing-indicator';
+            typingDiv.innerHTML = `
+                <div class="message-content">
+                    <span class="typing-dots">
+                        <span></span><span></span><span></span>
+                    </span>
+                </div>
+            `;
+
+            messagesContainer.appendChild(typingDiv);
+
+            // Scroll to show typing indicator
+            // Scroll to show typing indicator
+            setTimeout(() => {
+                scrollChatToBottom();
+            }, 100);
+        }
+
+        function hideTypingIndicator() {
+            const typingIndicator = document.getElementById('typing-indicator');
+            if (typingIndicator) {
+                typingIndicator.remove();
+            }
+        }
+
+        function showNotification(message, type = 'success') {
+            // Create notification div
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${type === 'error' ? '#ef4444' : '#10b981'};
+                color: white;
+                padding: 12px 20px;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                z-index: 10000;
+                animation: slideIn 0.3s ease;
+            `;
+
+            document.body.appendChild(notification);
+
+            // Auto remove after 3 seconds
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // ═══════════════════════════════════════════════
+        // CURRICULUM HISTORY
+        // ═══════════════════════════════════════════════
+        let historyOpen = false;
+
+        function toggleHistoryPanel() {
+            const panel = document.getElementById('history-panel');
+            historyOpen = !historyOpen;
+            panel.style.display = historyOpen ? 'block' : 'none';
+            if (historyOpen) loadHistory();
+        }
+
+        function loadHistory() {
+            const list = document.getElementById('history-list');
+            list.innerHTML = '<div class="history-loading"><i class="ph ph-spinner-gap loading-icon"></i> Loading...</div>';
+
+            fetch('/curriculum_history?limit=15')
+                .then(r => r.json())
+                .then(data => {
+                    if (!data.success || !data.history.length) {
+                        list.innerHTML = '<div class="history-empty"><i class="ph ph-folder-open"></i><p>No curricula yet.<br>Generate one above!</p></div>';
+                        return;
+                    }
+                    list.innerHTML = data.history.map(item => {
+                        const date = new Date(item.created_at);
+                        const ago = timeAgo(date);
+                        const sems = item.semesters || '?';
+                        const courses = item.courses_per_sem || '?';
+                        return `
+                            <a href="/curriculum_history/${item.id}/view" class="history-item">
+                                <div class="history-item-main">
+                                    <span class="history-program">${escapeHtml(item.program)}</span>
+                                    <span class="history-meta">${escapeHtml(item.level)} · ${sems} sem · ${courses} courses/sem</span>
+                                </div>
+                                <div class="history-item-side">
+                                    <span class="history-time">${ago}</span>
+                                    <button class="history-delete-btn" onclick="deleteHistoryItem(event, '${item.id}')" title="Delete">
+                                        <i class="ph ph-trash"></i>
+                                    </button>
+                                </div>
+                            </a>`;
+                    }).join('');
+                })
+                .catch(() => {
+                    list.innerHTML = '<div class="history-empty"><p>Could not load history.</p></div>';
+                });
+        }
+
+        function deleteHistoryItem(e, id) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (!confirm('Delete this curriculum from history?')) return;
+
+            fetch(`/curriculum_history/${id}`, { method: 'DELETE' })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        showNotification('Curriculum deleted');
+                        loadHistory();
+                    } else {
+                        showNotification(data.error || 'Delete failed', 'error');
+                    }
+                })
+                .catch(() => showNotification('Delete failed', 'error'));
+        }
+
+        function timeAgo(date) {
+            const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
+            if (seconds < 60) return 'just now';
+            const minutes = Math.floor(seconds / 60);
+            if (minutes < 60) return minutes + 'm ago';
+            const hours = Math.floor(minutes / 60);
+            if (hours < 24) return hours + 'h ago';
+            const days = Math.floor(hours / 24);
+            if (days < 30) return days + 'd ago';
+            return date.toLocaleDateString();
+        }
+
+        function escapeHtml(text) {
+            const d = document.createElement('div');
+            d.textContent = text;
+            return d.innerHTML;
+        }
     </script>
 </body>
 

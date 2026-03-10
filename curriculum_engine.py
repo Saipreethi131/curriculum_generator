@@ -15,20 +15,18 @@ class CurriculumEngine:
     COURSES_PER_SEMESTER = 3  # Fixed for speed and consistency
     
     @staticmethod
-    def calculate_structure(semesters: int, hours: str) -> Dict[str, int]:
+    def calculate_structure(semesters: int, hours: str, courses_per_sem: int = 3) -> Dict[str, int]:
         """
-        Pre-calculate curriculum structure (don't ask AI).
-        
-        This saves 5-10 seconds by not requiring AI to decide structure.
+        Pre-calculate curriculum structure.
         
         Args:
             semesters: Number of semesters
             hours: Weekly hours (string like "20-25")
+            courses_per_sem: Number of courses per semester
             
         Returns:
             Dict with total_courses, total_credits, courses_per_semester
         """
-        courses_per_sem = CurriculumEngine.COURSES_PER_SEMESTER
         total_courses = semesters * courses_per_sem
         total_credits = total_courses * CurriculumEngine.CREDITS_PER_COURSE
         
@@ -135,9 +133,11 @@ class CurriculumEngine:
         Returns:
             Enhanced curriculum dict
         """
-        # Fill missing topics for all courses
+        # Fill missing topics and skills for all courses
         for sem in curriculum.get('semesters', []):
             for subj in sem.get('subjects', []):
                 CurriculumEngine.fill_missing_topics(subj)
+                if 'skills' not in subj or not subj['skills']:
+                    subj['skills'] = subj.get('topics', [])[:3]
         
         return curriculum

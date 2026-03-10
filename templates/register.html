@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account - EduGen</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Instrument+Serif&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <style>
+        /* ═══════════════════════════════════════════════
+           REGISTER PAGE — DARK EDITORIAL DIRECTION
+           Self-contained. No external style.css dependency.
+           ═══════════════════════════════════════════════ */
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --r-bg: #0b0e13;
+            --r-surface: #13161d;
+            --r-surface-raised: #1a1e28;
+            --r-border: rgba(255,255,255,0.06);
+            --r-border-hover: rgba(255,255,255,0.12);
+            --r-text: #e8e6e3;
+            --r-text-muted: #7a7d85;
+            --r-accent: #ff5722;
+            --r-accent-glow: rgba(255, 87, 34, 0.35);
+            --r-teal: #2dd4bf;
+            --r-teal-glow: rgba(45, 212, 191, 0.2);
+            --r-font-body: 'Space Grotesk', system-ui, sans-serif;
+            --r-font-display: 'Instrument Serif', Georgia, serif;
+            --r-font-mono: 'JetBrains Mono', monospace;
+        }
+
+        html { font-size: 16px; }
+        body {
+            font-family: var(--r-font-body);
+            background: var(--r-bg);
+            color: var(--r-text);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ── Atmospheric Background ── */
+        .reg-bg-grain {
+            position: fixed; inset: 0;
+            pointer-events: none; z-index: 0;
+            opacity: 0.035;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+            background-size: 256px 256px;
+        }
+
+        .reg-orb {
+            position: fixed; border-radius: 50%;
+            pointer-events: none; z-index: 0;
+        }
+        .reg-orb--accent {
+            width: 600px; height: 600px;
+            top: -220px; right: -180px;
+            background: radial-gradient(circle, var(--r-accent-glow) 0%, transparent 70%);
+            animation: orbFloat 14s ease-in-out infinite alternate;
+        }
+        .reg-orb--teal {
+            width: 450px; height: 450px;
+            bottom: -160px; left: -140px;
+            background: radial-gradient(circle, var(--r-teal-glow) 0%, transparent 70%);
+            animation: orbFloat 18s ease-in-out infinite alternate-reverse;
+        }
+
+        @keyframes orbFloat {
+            0%   { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(30px, -20px) scale(1.08); }
+        }
+
+        /* ── Main Stage ── */
+        .reg-stage {
+            position: relative; z-index: 1;
+            width: min(1100px, 100%);
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            align-items: center;
+        }
+
+        /* ── Left: Editorial Side ── */
+        .reg-editorial {
+            padding: 2rem 0;
+        }
+
+        .reg-kicker {
+            display: inline-flex; align-items: center; gap: 0.45rem;
+            font-family: var(--r-font-mono);
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.18em;
+            color: var(--r-accent);
+            margin-bottom: 1.2rem;
+            border: 1px solid rgba(255,87,34,0.25);
+            padding: 0.35rem 0.85rem;
+            border-radius: 999px;
+            background: rgba(255,87,34,0.06);
+        }
+
+        .reg-kicker::before {
+            content: '';
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: var(--r-accent);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50%      { opacity: 0.4; transform: scale(0.7); }
+        }
+
+        .reg-brand {
+            font-family: var(--r-font-display);
+            font-size: clamp(4rem, 9vw, 7rem);
+            font-weight: 400;
+            line-height: 0.92;
+            letter-spacing: -0.02em;
+            color: var(--r-text);
+            margin-bottom: 1.5rem;
+        }
+
+        .reg-brand-icon {
+            display: inline-block;
+            color: var(--r-accent);
+            font-size: 0.5em;
+            transform: rotate(-12deg) translateY(-8px);
+            filter: drop-shadow(0 0 12px var(--r-accent-glow));
+        }
+
+        .reg-tagline {
+            font-size: clamp(1rem, 1.6vw, 1.15rem);
+            line-height: 1.7;
+            color: var(--r-text-muted);
+            max-width: 42ch;
+            margin-bottom: 2rem;
+        }
+
+        .reg-features {
+            list-style: none; padding: 0;
+            display: flex; flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .reg-features li {
+            display: flex; align-items: center; gap: 0.65rem;
+            font-size: 0.92rem;
+            font-weight: 500;
+            color: rgba(232,230,227,0.85);
+        }
+
+        .reg-features i {
+            font-size: 1.2rem;
+            color: var(--r-teal);
+            width: 32px; height: 32px;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(45,212,191,0.08);
+            border-radius: 8px;
+            border: 1px solid rgba(45,212,191,0.15);
+        }
+
+        /* ── Decorative Divider ── */
+        .reg-divider {
+            width: 60px; height: 3px;
+            margin-top: 2rem;
+            background: linear-gradient(90deg, var(--r-accent), var(--r-teal));
+            border-radius: 999px;
+        }
+
+        /* ── Right: Card ── */
+        .reg-card {
+            position: relative;
+            background: var(--r-surface);
+            border: 1px solid var(--r-border);
+            border-radius: 24px;
+            padding: 2.5rem 2.2rem;
+            box-shadow:
+                0 0 0 1px rgba(255,255,255,0.03),
+                0 30px 80px -20px rgba(0,0,0,0.7),
+                0 0 60px -10px var(--r-accent-glow);
+            overflow: hidden;
+        }
+
+        .reg-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg,
+                var(--r-accent) 0%,
+                var(--r-teal) 50%,
+                var(--r-accent) 100%);
+            background-size: 200% 100%;
+            animation: gradientShift 4s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0%   { background-position: 0% 50%; }
+            50%  { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .reg-card-heading {
+            font-family: var(--r-font-display);
+            font-size: clamp(1.8rem, 3vw, 2.4rem);
+            font-weight: 400;
+            letter-spacing: -0.01em;
+            color: var(--r-text);
+            margin-bottom: 0.35rem;
+        }
+
+        .reg-card-sub {
+            font-size: 0.88rem;
+            color: var(--r-text-muted);
+            margin-bottom: 1.8rem;
+        }
+
+        /* ── Form Styles ── */
+        .reg-field {
+            margin-bottom: 1.25rem;
+        }
+
+        .reg-label {
+            display: block;
+            font-size: 0.78rem;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--r-text-muted);
+            margin-bottom: 0.5rem;
+        }
+
+        .reg-input-wrap {
+            position: relative;
+        }
+
+        .reg-input-icon {
+            position: absolute;
+            left: 14px; top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.1rem;
+            color: var(--r-text-muted);
+            transition: color 0.25s ease;
+            pointer-events: none;
+        }
+
+        .reg-input {
+            width: 100%;
+            padding: 0.85rem 1rem 0.85rem 2.65rem;
+            font-family: var(--r-font-body);
+            font-size: 0.95rem;
+            color: var(--r-text);
+            background: var(--r-surface-raised);
+            border: 1.5px solid var(--r-border);
+            border-radius: 12px;
+            outline: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .reg-input::placeholder {
+            color: rgba(122,125,133,0.6);
+        }
+
+        .reg-input:hover {
+            border-color: var(--r-border-hover);
+            background: #1e222d;
+        }
+
+        .reg-input:focus {
+            border-color: var(--r-accent);
+            box-shadow: 0 0 0 3px var(--r-accent-glow), 0 0 20px -4px var(--r-accent-glow);
+            background: #1e222d;
+        }
+
+        .reg-input:focus ~ .reg-input-icon {
+            color: var(--r-accent);
+        }
+
+        .reg-hint {
+            display: block;
+            margin-top: 0.4rem;
+            font-size: 0.78rem;
+            color: var(--r-text-muted);
+            font-family: var(--r-font-mono);
+        }
+
+        /* ── Error ── */
+        .reg-error {
+            background: rgba(239, 68, 68, 0.1);
+            color: #f87171;
+            padding: 0.8rem 1rem;
+            border-radius: 12px;
+            border: 1px solid rgba(239, 68, 68, 0.25);
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: flex; align-items: center; gap: 0.5rem;
+        }
+
+        .reg-error i { font-size: 1.1rem; }
+
+        /* ── CTA Button ── */
+        .reg-submit {
+            position: relative;
+            width: 100%;
+            padding: 1rem 1.5rem;
+            font-family: var(--r-font-body);
+            font-size: 1rem;
+            font-weight: 600;
+            color: white;
+            background: linear-gradient(135deg, var(--r-accent) 0%, #e64a19 100%);
+            border: none;
+            border-radius: 14px;
+            cursor: pointer;
+            overflow: hidden;
+            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 8px 30px -8px var(--r-accent-glow);
+            margin-top: 0.5rem;
+            letter-spacing: 0.02em;
+        }
+
+        .reg-submit::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 60%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .reg-submit::after {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 60%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+            transition: none;
+        }
+
+        .reg-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 14px 40px -8px var(--r-accent-glow);
+        }
+
+        .reg-submit:hover::before { opacity: 1; }
+
+        .reg-submit:hover::after {
+            transition: left 0.6s ease;
+            left: 120%;
+        }
+
+        .reg-submit:active {
+            transform: translateY(0);
+        }
+
+        .reg-footer {
+            text-align: center;
+            margin-top: 1.25rem;
+            font-size: 0.9rem;
+            color: var(--r-text-muted);
+        }
+
+        .reg-footer a {
+            color: var(--r-teal);
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.25s ease;
+        }
+
+        .reg-footer a:hover {
+            color: var(--r-accent);
+        }
+
+        /* ── Reveal Animation ── */
+        .reveal {
+            opacity: 0;
+            transform: translateY(28px);
+            animation: revealUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            animation-delay: var(--d, 0s);
+        }
+
+        @keyframes revealUp {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 900px) {
+            .reg-stage {
+                grid-template-columns: 1fr;
+                max-width: 520px;
+                gap: 1.5rem;
+            }
+            .reg-editorial { text-align: center; align-items: center; }
+            .reg-tagline { margin-left: auto; margin-right: auto; }
+            .reg-brand { font-size: clamp(3rem, 14vw, 5rem); }
+            .reg-divider { margin: 1.5rem auto 0; }
+            .reg-features { align-items: center; }
+        }
+
+        @media (max-width: 480px) {
+            body { padding: 1rem; }
+            .reg-card { padding: 1.8rem 1.4rem; border-radius: 18px; }
+            .reg-brand { font-size: clamp(2.5rem, 16vw, 3.5rem); }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .reveal, .reg-orb, .reg-kicker::before { animation: none; }
+            .reveal { opacity: 1; transform: none; }
+            .reg-submit, .reg-input { transition: none; }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Atmospheric layers -->
+    <div class="reg-bg-grain" aria-hidden="true"></div>
+    <div class="reg-orb reg-orb--accent" aria-hidden="true"></div>
+    <div class="reg-orb reg-orb--teal" aria-hidden="true"></div>
+
+    <main class="reg-stage" aria-labelledby="reg-title">
+
+        <!-- Left: Editorial branding -->
+        <div class="reg-editorial reveal" style="--d: 0.1s">
+            <span class="reg-kicker">Join EduGen</span>
+
+            <h1 class="reg-brand" id="reg-title">
+                <i class="ph-fill ph-graduation-cap reg-brand-icon" aria-hidden="true"></i>
+                EduGen
+            </h1>
+
+            <p class="reg-tagline">
+                Your AI curriculum engine. Design structured, personalized learning roadmaps in minutes — not days.
+            </p>
+
+            <ul class="reg-features" aria-label="Platform highlights">
+                <li>
+                    <i class="ph-bold ph-sparkle" aria-hidden="true"></i>
+                    AI-generated curriculum roadmaps
+                </li>
+                <li>
+                    <i class="ph-bold ph-lightning" aria-hidden="true"></i>
+                    Blazing-fast generation engine
+                </li>
+                <li>
+                    <i class="ph-bold ph-shield-check" aria-hidden="true"></i>
+                    Secure accounts & saved progress
+                </li>
+                <li>
+                    <i class="ph-bold ph-file-pdf" aria-hidden="true"></i>
+                    Export to PDF instantly
+                </li>
+            </ul>
+
+            <div class="reg-divider" aria-hidden="true"></div>
+        </div>
+
+        <!-- Right: Registration form card -->
+        <div class="reg-card reveal" style="--d: 0.25s" aria-label="Create account form">
+            <h2 class="reg-card-heading">Create Account</h2>
+            <p class="reg-card-sub">Start generating in under a minute.</p>
+
+            {% if error %}
+            <div class="reg-error" role="alert" aria-live="polite">
+                <i class="ph-bold ph-warning-circle" aria-hidden="true"></i>
+                {{ error }}
+            </div>
+            {% endif %}
+
+            <form method="POST" action="/register" novalidate>
+                <input type="hidden" name="next" value="{{ request.args.get('next', '/') }}">
+
+                <div class="reg-field">
+                    <label class="reg-label" for="reg-username">Username</label>
+                    <div class="reg-input-wrap">
+                        <i class="ph-bold ph-user reg-input-icon" aria-hidden="true"></i>
+                        <input type="text" class="reg-input" id="reg-username" name="username"
+                               placeholder="Choose a username" autocomplete="username" required>
+                    </div>
+                </div>
+
+                <div class="reg-field">
+                    <label class="reg-label" for="reg-email">Email</label>
+                    <div class="reg-input-wrap">
+                        <i class="ph-bold ph-envelope-simple reg-input-icon" aria-hidden="true"></i>
+                        <input type="email" class="reg-input" id="reg-email" name="email"
+                               placeholder="you@example.com" autocomplete="email" required>
+                    </div>
+                </div>
+
+                <div class="reg-field">
+                    <label class="reg-label" for="reg-password">Password</label>
+                    <div class="reg-input-wrap">
+                        <i class="ph-bold ph-lock reg-input-icon" aria-hidden="true"></i>
+                        <input type="password" class="reg-input" id="reg-password" name="password"
+                               placeholder="Min 8 characters" autocomplete="new-password" required>
+                    </div>
+                    <small class="reg-hint">// min 8 characters</small>
+                </div>
+
+                <div class="reg-field">
+                    <label class="reg-label" for="reg-confirm">Confirm Password</label>
+                    <div class="reg-input-wrap">
+                        <i class="ph-bold ph-lock-key reg-input-icon" aria-hidden="true"></i>
+                        <input type="password" class="reg-input" id="reg-confirm" name="confirm_password"
+                               placeholder="Re-enter password" autocomplete="new-password" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="reg-submit">
+                    Create Account <i class="ph-bold ph-arrow-right" aria-hidden="true" style="margin-left:6px;vertical-align:middle"></i>
+                </button>
+            </form>
+
+            <p class="reg-footer">
+                Already have an account? <a href="/login">Sign in</a>
+            </p>
+        </div>
+    </main>
+</body>
+
+</html>

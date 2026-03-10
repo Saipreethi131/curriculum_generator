@@ -16,40 +16,163 @@
         <div class="logo">
             <i class="ph-fill ph-graduation-cap"></i> EduGen
         </div>
-        <div class="nav-links">
-            <a href="/download_pdf" target="_blank" style="color: #475569; font-weight: 700; display: flex; align-items: center; gap: 0.5rem; background: #f1f5f9; padding: 0.6rem 1.25rem; border-radius: 10px; transition: all 0.3s ease;">
+        <div class="result-topbar-actions">
+            <a href="/" class="result-action-link">
+                <i class="ph ph-arrow-left"></i> Back to Home
+            </a>
+            <a href="/download_pdf" target="_blank" class="result-action-link result-action-link-soft">
                 <i class="ph ph-download-simple"></i> Download Full PDF
             </a>
+            {% if current_user %}
+            <span class="user-chip"><i class="ph ph-user-circle"></i> {{ current_user.username }}</span>
+            <form method="POST" action="/logout" class="logout-form">
+                <button type="submit" class="btn-secondary topbar-logout-btn">Logout</button>
+            </form>
+            {% else %}
+            <a href="/login" class="result-action-link">
+                <i class="ph ph-sign-in"></i> Login
+            </a>
+            {% endif %}
         </div>
     </nav>
 
     <header class="result-header">
-        <div style="max-width: 1200px; margin: 0 auto;">
-            <h1 style="margin: 0;">{{ nav_data.program if nav_data else 'Generation Failed' }}</h1>
-            <p style="opacity: 0.8; margin-top: 0.5rem;">Semester-wise curriculum structure</p>
+        <div class="result-header-inner">
+            <h1 class="result-title">{{ nav_data.program if nav_data else 'Generation Failed' }}</h1>
+            <p class="result-subtitle">Semester-wise curriculum structure</p>
+            
+            {% if nav_data %}
+            <!-- View Toggle Buttons -->
+            <div class="view-toggle-row">
+                <button id="tableViewBtn" class="view-toggle-btn active" onclick="switchView('table')">
+                    <i class="ph-fill ph-table"></i> Table View
+                </button>
+                <button id="roadmapViewBtn" class="view-toggle-btn" onclick="switchView('roadmap')">
+                    <i class="ph-fill ph-git-branch"></i> Visual Roadmap
+                </button>
+            </div>
+            {% endif %}
         </div>
     </header>
 
     <div class="result-container">
         {% if error %}
-        <div style="background: #fee2e2; color: #b91c1c; padding: 1rem; border-radius: 8px;">
+        <div class="auth-error">
             <strong>Error:</strong> {{ error }}
         </div>
         {% elif nav_data %}
+        
+        <!-- VISUAL ROADMAP VIEW -->
+        <div id="roadmapView" class="roadmap-container" style="display: none;">
+            <div class="roadmap-shell">
+                
+                <div class="skill-roadmap">
+
+                    <!-- Origin node -->
+                    <div class="sr-origin">
+                        <span class="sr-origin-pulse"></span>
+                        <span class="sr-origin-icon">🚀</span>
+                        <span class="sr-origin-label">Begin — {{ nav_data.program }}</span>
+                    </div>
+
+                    <div class="sr-spine"></div>
+
+                    {% for sem in nav_data.semesters %}
+                    <!-- Semester phase -->
+                    <div class="sr-phase" style="--phase-delay: {{ loop.index0 * 0.12 }}s">
+                        <div class="sr-phase-header">
+                            <div class="sr-phase-line"></div>
+                            <div class="sr-phase-badge">
+                                <span class="sr-phase-num">{{ sem.semester }}</span>
+                                <span class="sr-phase-text">Semester {{ sem.semester }}</span>
+                            </div>
+                            <div class="sr-phase-line"></div>
+                        </div>
+                        <div class="sr-phase-count">{{ sem.subjects|length }} course{{ 's' if sem.subjects|length > 1 else '' }}</div>
+
+                        <div class="sr-track">
+                            {% for subj in sem.subjects %}
+                            <div class="sr-card" onclick="openSyllabus('{{ subj.name }}', '{{ nav_data.program }}')" style="--card-delay: {{ (loop.index0 * 0.06) + (loop.parent.loop.index0 * 0.12) }}s">
+                                <div class="sr-card-accent"></div>
+                                <div class="sr-card-body">
+                                    <div class="sr-card-head">
+                                        <span class="sr-card-code">{{ subj.code }}</span>
+                                        <span class="sr-card-credits"><i class="ph ph-graduation-cap"></i> {{ subj.credits }} cr</span>
+                                    </div>
+                                    <h4 class="sr-card-title">{{ subj.name }}</h4>
+                                    <ul class="sr-topic-list">
+                                        {% if subj.get('skills') %}
+                                        {% for skill in subj.skills[:4] %}
+                                        <li class="sr-topic-item">
+                                            <span class="sr-topic-marker">›</span>
+                                            <span class="sr-topic-text">{{ skill }}</span>
+                                        </li>
+                                        {% endfor %}
+                                        {% else %}
+                                        {% for topic in subj.topics[:3] %}
+                                        <li class="sr-topic-item">
+                                            <span class="sr-topic-marker">›</span>
+                                            <span class="sr-topic-text">{{ topic }}</span>
+                                        </li>
+                                        {% endfor %}
+                                        {% endif %}
+                                    </ul>
+                                    <div class="sr-card-footer">
+                                        <span class="sr-card-action">View syllabus <i class="ph ph-arrow-right"></i></span>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    {% if not loop.last %}
+                    <div class="sr-connector">
+                        <div class="sr-connector-line"></div>
+                        <div class="sr-connector-arrow">
+                            <i class="ph-bold ph-caret-down"></i>
+                        </div>
+                        <div class="sr-connector-line"></div>
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+
+                    <div class="sr-spine"></div>
+
+                    <!-- Finish node -->
+                    <div class="sr-finish">
+                        <span class="sr-finish-pulse"></span>
+                        <span class="sr-finish-icon">🎓</span>
+                        <span class="sr-finish-label">Program Complete</span>
+                    </div>
+
+                </div>
+
+                <div class="roadmap-tip">
+                    <p>
+                        <i class="ph-fill ph-info"></i>
+                        <strong>Tip:</strong> Click any course card to explore its full syllabus &amp; skill breakdown.
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- TABLE VIEW (Original) -->
+        <div id="tableView">
 
         {% for sem in nav_data.semesters %}
         <div class="semester-section">
             <div class="semester-header">
-                <i class="ph-fill ph-books" style="margin-right: 0.5rem;"></i>
+                <i class="ph-fill ph-books semester-icon"></i>
                 Semester {{ sem.semester }}: {{ sem.subjects|length }} Courses
             </div>
 
             <div class="subject-grid">
                 {% for subj in sem.subjects %}
                 <div class="subject-card" onclick="openSyllabus('{{ subj.name }}', '{{ nav_data.program }}')">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div class="subject-head-row">
                         <span class="subject-code">{{ subj.code }}</span>
-                        <span style="font-size: 1.2rem; color: #d1d5db;">➔</span>
+                        <span class="subject-arrow">➔</span>
                     </div>
 
                     <div class="subject-title">{{ subj.name }}</div>
@@ -59,13 +182,12 @@
                         <span class="meta-item"><i class="ph-fill ph-clock"></i> {{ subj.hours_per_week }}h/week</span>
                     </div>
 
-                    <p style="font-size: 0.85rem; color: #6b7280; margin-bottom: 1rem; line-height: 1.5;">
+                    <p class="subject-desc">
                         {{ subj.description }}
                     </p>
 
                     <div class="topic-tags">
-                        <span
-                            style="font-size: 0.75rem; font-weight: 600; color: #9ca3af; margin-right: 4px;">Topics:</span>
+                        <span class="topic-label">Topics:</span>
                         {% for topic in subj.topics[:2] %}
                         <span class="topic-tag">{{ topic }}</span>
                         {% endfor %}
@@ -78,6 +200,8 @@
             </div>
         </div>
         {% endfor %}
+        </div>
+        <!-- End Table View -->
 
         {% endif %}
     </div>
@@ -85,32 +209,177 @@
     <!-- DRAWER FOR SYLLABUS -->
     <div class="modal-backdrop" id="backdrop" onclick="closeSyllabus()"></div>
     <div class="syllabus-modal" id="drawer">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 2px solid #e2e8f0;">
-            <h2 id="drawer-title" style="margin: 0; color: #475569; font-weight: 800; font-size: 1.5rem; letter-spacing: -0.5px;">Subject Title</h2>
-            <button onclick="closeSyllabus()"
-                style="background: #f1f5f9; border: none; font-size: 1.75rem; cursor: pointer; width: 36px; height: 36px; border-radius: 8px; color: #475569; transition: all 0.3s ease;">&times;</button>
+        <div class="drawer-header-row">
+            <h2 id="drawer-title" class="drawer-title">Subject Title</h2>
+            <button onclick="closeSyllabus()" class="drawer-close-btn">&times;</button>
         </div>
         
-        <div style="margin-bottom: 1.5rem;">
+        <div class="drawer-actions-row">
+            <!-- Course View Toggle -->
+            <div class="course-view-group">
+                <button id="courseTextViewBtn" class="course-view-btn active" onclick="switchCourseView('text')">
+                    <i class="ph-fill ph-article"></i> Text View
+                </button>
+                <button id="courseRoadmapViewBtn" class="course-view-btn" onclick="switchCourseView('roadmap')">
+                    <i class="ph-fill ph-path"></i> Roadmap
+                </button>
+            </div>
+            
             <button onclick="downloadCourseSyllabus()" id="download-course-btn"
-                style="background: #475569; color: white; border: none; padding: 0.75rem 1.25rem; border-radius: 10px; cursor: pointer; font-weight: 700; font-size: 0.95rem; display: none; transition: all 0.3s ease; box-shadow: 0 2px 4px rgba(71, 85, 105, 0.3);">
-                <i class="ph ph-download-simple"></i> Download Course Syllabus
+                class="download-course-btn"
+                style="display: none;">
+                <i class="ph ph-download-simple"></i> Download
             </button>
         </div>
 
         <div id="drawer-loader" class="loading-spinner hidden"></div>
-        <div id="drawer-content"></div>
+        
+        <!-- Text View -->
+        <div id="courseTextView" style="display: block;">
+            <div id="drawer-content"></div>
+        </div>
+        
+        <!-- Roadmap View -->
+        <div id="courseRoadmapView" style="display: none;">
+            <div id="course-roadmap-content"></div>
+        </div>
     </div>
 
     <script>
+        // Configure marked to open links in new tabs
+        const renderer = new marked.Renderer();
+        const origLinkRenderer = renderer.link.bind(renderer);
+        renderer.link = function(href, title, text) {
+            // Handle both old and new marked.js API
+            if (typeof href === 'object') {
+                const token = href;
+                const html = origLinkRenderer(token);
+                return html.replace('<a ', '<a target="_blank" rel="noopener noreferrer" ');
+            }
+            const html = origLinkRenderer(href, title, text);
+            return html.replace('<a ', '<a target="_blank" rel="noopener noreferrer" ');
+        };
+        marked.setOptions({ renderer });
+
         const drawer = document.getElementById('drawer');
         const backdrop = document.getElementById('backdrop');
         const drawerContent = document.getElementById('drawer-content');
         const drawerLoader = document.getElementById('drawer-loader');
         const drawerTitle = document.getElementById('drawer-title');
         
+        // View switching functionality
+        let currentView = 'table';
+        
+        function switchView(view) {
+            currentView = view;
+            const tableView = document.getElementById('tableView');
+            const roadmapView = document.getElementById('roadmapView');
+            const tableBtn = document.getElementById('tableViewBtn');
+            const roadmapBtn = document.getElementById('roadmapViewBtn');
+            
+            if (view === 'table') {
+                tableView.style.display = 'block';
+                roadmapView.style.display = 'none';
+                tableBtn.classList.add('active');
+                roadmapBtn.classList.remove('active');
+            } else {
+                tableView.style.display = 'none';
+                roadmapView.style.display = 'block';
+                roadmapBtn.classList.add('active');
+                tableBtn.classList.remove('active');
+            }
+        }
+        
         let currentSyllabusContent = '';
         let currentSubjectName = '';
+        let currentCourseView = 'text';
+        let currentSyllabusData = null;
+        
+        function switchCourseView(view) {
+            currentCourseView = view;
+            const textView = document.getElementById('courseTextView');
+            const roadmapView = document.getElementById('courseRoadmapView');
+            const textBtn = document.getElementById('courseTextViewBtn');
+            const roadmapBtn = document.getElementById('courseRoadmapViewBtn');
+            
+            if (view === 'text') {
+                textView.style.display = 'block';
+                roadmapView.style.display = 'none';
+                textBtn.classList.add('active');
+                roadmapBtn.classList.remove('active');
+            } else {
+                textView.style.display = 'none';
+                roadmapView.style.display = 'block';
+                roadmapBtn.classList.add('active');
+                textBtn.classList.remove('active');
+                
+                // Generate roadmap if we have data
+                if (currentSyllabusData) {
+                    generateCourseRoadmap(currentSyllabusData);
+                }
+            }
+        }
+        
+        function generateCourseRoadmap(syllabusData) {
+            const roadmapContainer = document.getElementById('course-roadmap-content');
+            
+            let html = '<div class="course-skill-path">';
+            
+            if (syllabusData && syllabusData.modules && syllabusData.modules.length > 0) {
+                const total = syllabusData.modules.length;
+                syllabusData.modules.forEach((module, index) => {
+                    const unitTitle = module.unit || module.name || `Unit ${index + 1}`;
+                    const topics = module.topics || [];
+                    const isLast = index === total - 1;
+                    const pct = Math.round(((index + 1) / total) * 100);
+                    
+                    html += `
+                        <div class="csp-node" style="--node-delay: ${index * 0.08}s">
+                            <div class="csp-marker">
+                                <span class="csp-step">${index + 1}</span>
+                            </div>
+                            <div class="csp-body">
+                                <div class="csp-head">
+                                    <h4 class="csp-title">${unitTitle}</h4>
+                                    <span class="csp-progress">${pct}%</span>
+                                </div>
+                                <ul class="csp-topic-list">
+                    `;
+                    
+                    if (topics.length > 0) {
+                        topics.forEach((topic, ti) => {
+                            const text = typeof topic === 'string' ? topic : (topic.name || topic);
+                            html += `<li class="csp-topic-item" style="--ti-delay: ${ti * 0.03}s"><span class="csp-topic-marker">›</span><span class="csp-topic-text">${text}</span></li>`;
+                        });
+                    } else {
+                        html += `<li class="csp-topic-item csp-placeholder"><span class="csp-topic-text">Topics covered in this unit</span></li>`;
+                    }
+                    
+                    html += `
+                                </ul>
+                                <div class="csp-bar"><div class="csp-bar-fill" style="width: ${pct}%"></div></div>
+                            </div>
+                        </div>
+                    `;
+                });
+            } else {
+                html += `
+                    <div style="padding: 3rem 2rem; text-align: center; background: var(--surface-raised); border-radius: 12px; border: 2px dashed rgba(255,255,255,0.1);">
+                        <i class="ph ph-info" style="font-size: 3rem; color: var(--text-muted); margin-bottom: 1rem; display: block;"></i>
+                        <p style="margin: 0.5rem 0; color: var(--text-color); font-size: 1.1rem; font-weight: 600;">Skill path unavailable</p>
+                        <p style="margin: 1rem 0 1.5rem 0; font-size: 0.95rem; color: var(--text-muted); max-width: 400px; margin-left: auto; margin-right: auto;">
+                            Switch to Text View for full course details.
+                        </p>
+                        <button onclick="switchCourseView('text')" style="background: var(--primary-color); color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.95rem;">
+                            <i class="ph ph-article"></i> Text View
+                        </button>
+                    </div>
+                `;
+            }
+            
+            html += '</div>';
+            roadmapContainer.innerHTML = html;
+        }
 
         function formatJsonSyllabus(data) {
             let md = '';
@@ -154,17 +423,24 @@
         }
 
         async function openSyllabus(subjectName, programName) {
+            console.log('Opening syllabus for:', subjectName); // Debug
+            
             // Open Drawer
             drawer.classList.add('open');
             backdrop.classList.add('open');
             document.body.style.overflow = 'hidden'; // Stop scrolling
+            
+            // Reset to text view
+            switchCourseView('text');
 
             // Set Loading State
             drawerTitle.textContent = subjectName;
             currentSubjectName = subjectName;
             drawerContent.innerHTML = '';
+            document.getElementById('course-roadmap-content').innerHTML = '';
             drawerLoader.style.display = 'block';
             document.getElementById('download-course-btn').style.display = 'none';
+            currentSyllabusData = null;
 
             try {
                 const response = await fetch('/generate_subject_details', {
@@ -176,25 +452,74 @@
                     })
                 });
 
+                if (!response.ok) {
+                    throw new Error(`Server error: ${response.status} - ${response.statusText}`);
+                }
+
                 const data = await response.json();
+                console.log('Received data:', data); // Debug
 
                 drawerLoader.style.display = 'none';
                 document.getElementById('download-course-btn').style.display = 'inline-block';
                 
                 // Check if content is JSON and format it, otherwise render as Markdown
                 let content = data.content;
+                
+                if (!content || content.trim() === '') {
+                    throw new Error('No content received from server. The AI service may be experiencing issues.');
+                }
+                
+                console.log('Content length:', content.length); // Debug
+                
                 try {
                     const jsonData = JSON.parse(content);
+                    console.log('Content is JSON, parsing...'); // Debug
+                    currentSyllabusData = jsonData; // Store for roadmap view
                     // Convert JSON syllabus to formatted Markdown
                     content = formatJsonSyllabus(jsonData);
                 } catch(e) {
                     // Not JSON, treat as Markdown (expected path)
+                    console.log('Content is Markdown, extracting modules...'); // Debug
+                    // Try to extract modules from markdown for roadmap
+                    currentSyllabusData = extractModulesFromMarkdown(content);
                 }
+                
                 currentSyllabusContent = content;
-                drawerContent.innerHTML = marked.parse(content);
+                const parsedContent = marked.parse(content);
+                drawerContent.innerHTML = parsedContent;
+                
+                // Make certification names clickable with Google search
+                linkifyCertifications(drawerContent);
+                
+                console.log('Syllabus loaded successfully'); // Debug
 
             } catch (err) {
-                drawerContent.innerHTML = `<p style="color:red">Error: ${err}</p>`;
+                console.error('Error loading syllabus:', err); // Debug
+                drawerLoader.style.display = 'none';
+                
+                // Provide user-friendly error message
+                let errorMessage = 'Error loading syllabus.';
+                if (err.message.includes('Server error: 503') || err.message.includes('503')) {
+                    errorMessage = 'The AI service is temporarily unavailable. This might be due to high demand or service maintenance. Please try again in a moment.';
+                } else if (err.message.includes('timeout') || err.message.includes('Timeout')) {
+                    errorMessage = 'The request took too long to complete. The AI service might be overloaded. Please try again.';
+                } else if (err.message.includes('No content')) {
+                    errorMessage = err.message;
+                } else {
+                    errorMessage = `${errorMessage} ${err.message}`;
+                }
+                
+                drawerContent.innerHTML = `
+                    <div style="padding: 2rem; background: #fee2e2; border-radius: 8px; border-left: 4px solid #ef4444;">
+                        <p style="color: #b91c1c; margin: 0 0 1rem 0;"><strong>⚠️ ${errorMessage}</strong></p>
+                        <p style="color: #dc2626; margin: 0; font-size: 0.9rem;">
+                            <strong>Troubleshooting tips:</strong><br>
+                            • Check your internet connection<br>
+                            • Try again in a few moments<br>
+                            • If the problem persists, the AI service may be experiencing high demand
+                        </p>
+                    </div>
+                `;
             }
         }
 
@@ -202,6 +527,157 @@
             drawer.classList.remove('open');
             backdrop.classList.remove('open');
             document.body.style.overflow = 'auto';
+            // Reset view
+            switchCourseView('text');
+        }
+
+        function linkifyCertifications(container) {
+            // Find the 🏆 Industry Certifications section and make cert names clickable
+            const headings = container.querySelectorAll('h2');
+            let certSection = null;
+            for (const h of headings) {
+                if (h.textContent.includes('Certification') || h.textContent.includes('🏆')) {
+                    certSection = h;
+                    break;
+                }
+            }
+            if (!certSection) return;
+
+            // Process all <strong> elements after the cert heading until next h2
+            let el = certSection.nextElementSibling;
+            while (el && el.tagName !== 'H2') {
+                const bolds = el.querySelectorAll('strong');
+                bolds.forEach(b => {
+                    // Skip if already wrapped in a link
+                    if (b.parentElement.tagName === 'A') return;
+                    const name = b.textContent.trim();
+                    if (name.length < 3) return;
+                    const searchUrl = 'https://www.google.com/search?q=' + encodeURIComponent(name + ' certification official site');
+                    const link = document.createElement('a');
+                    link.href = searchUrl;
+                    link.target = '_blank';
+                    link.rel = 'noopener noreferrer';
+                    link.innerHTML = b.innerHTML;
+                    b.replaceWith(link);
+                });
+                el = el.nextElementSibling;
+            }
+        }
+        
+        function extractModulesFromMarkdown(markdown) {
+            // Extract modules/units from markdown for roadmap view
+            const modules = [];
+            const lines = markdown.split('\n');
+            let currentModule = null;
+            
+            // Items to skip (not actual topics)
+            const skipPatterns = [
+                /^week/i,
+                /^online\s+resource/i,
+                /^recommended\s+reading/i,
+                /^book:/i,
+                /^book\s*$/i,
+                /^assignment/i,
+                /^mid-term/i,
+                /^final\s+project/i,
+                /^assessment/i,
+                /^lab\/activity:/i,
+                /^activity:/i,
+                /^lab:/i,
+                /^class\s+participation:/i,
+                /participation/i
+            ];
+            
+            for (let line of lines) {
+                // Check for unit/module headers (### Unit X: or ### Module X:)
+                const unitMatch = line.match(/^###\s*(Unit|Module)\s*(\d+):\s*(.+?)(?:\s*\(.*\))?$/i);
+                if (unitMatch) {
+                    if (currentModule) {
+                        modules.push(currentModule);
+                    }
+                    currentModule = {
+                        unit: unitMatch[3].trim(),
+                        topics: []
+                    };
+                }
+                // Stop collecting topics if we hit certain sections
+                else if (line.match(/^##\s*(📖|✅|📅)/)) {
+                    // Hit Reading, Assessment, or Schedule sections - stop module extraction
+                    if (currentModule) {
+                        modules.push(currentModule);
+                        currentModule = null;
+                    }
+                }
+                // Extract certifications as a special note (not stopping module extraction)
+                else if (line.match(/^##\s*🏆.*Certification/i)) {
+                    // Mark that we're now in certifications section
+                    if (currentModule) {
+                        modules.push(currentModule);
+                        currentModule = null;
+                    }
+                }
+                // Extract projects as a special note
+                else if (line.match(/^##\s*💡.*Project/i)) {
+                    // Mark that we're now in projects section
+                    if (currentModule) {
+                        modules.push(currentModule);
+                        currentModule = null;
+                    }
+                }
+                // Extract topics - handle the format: "- **Topic:** actual topic description"
+                else if (currentModule) {
+                    // Match lines like "- **Topic:** HTML Basics - Structure and syntax"
+                    const topicMatch = line.match(/^\s*-\s*\*\*Topic:\*\*\s*(.+)$/i);
+                    if (topicMatch) {
+                        const topicContent = topicMatch[1].trim();
+                        // Skip if matches any skip patterns
+                        const shouldSkip = skipPatterns.some(pattern => pattern.test(topicContent));
+                        if (!shouldSkip && topicContent.length > 0) {
+                            currentModule.topics.push(topicContent);
+                        }
+                    } 
+                    // Also match other bold items that aren't "Topic:"
+                    else {
+                        const boldMatch = line.match(/^\s*-\s*\*\*([^:]+?):\*\*\s*(.+)$/);
+                        if (boldMatch) {
+                            const label = boldMatch[1].trim();
+                            const content = boldMatch[2].trim();
+                            
+                            // Skip certain labels
+                            const shouldSkip = skipPatterns.some(pattern => pattern.test(label)) || 
+                                               skipPatterns.some(pattern => pattern.test(content)) ||
+                                               label.toLowerCase().includes('lab') ||
+                                               label.toLowerCase().includes('activity') ||
+                                               label.toLowerCase().includes('project') ||
+                                               label.toLowerCase().includes('book') ||
+                                               label.toLowerCase().includes('certification');
+                            
+                            if (!shouldSkip && content.length > 0) {
+                                currentModule.topics.push(`${label}: ${content}`);
+                            }
+                        }
+                        // Plain list items (- Something)
+                        else if (line.match(/^\s*-\s+(.+)/)) {
+                            const plainMatch = line.match(/^\s*-\s+(.+)/);
+                            if (plainMatch) {
+                                const content = plainMatch[1].trim();
+                                // Skip if matches any skip patterns
+                                const shouldSkip = skipPatterns.some(pattern => pattern.test(content));
+                                if (!shouldSkip && content.length > 3) {
+                                    currentModule.topics.push(content);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            if (currentModule) {
+                modules.push(currentModule);
+            }
+            
+            console.log('Extracted modules:', modules); // Debug log
+            return { modules: modules.length > 0 ? modules : null };
         }
         
         async function downloadCourseSyllabus() {

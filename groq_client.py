@@ -31,7 +31,7 @@ class GroqClient:
         self.api_key = api_key or os.environ.get("GROQ_API_KEY", "")
         self.model = model
         self.api_url = "https://api.groq.com/openai/v1/chat/completions"
-        self.timeout = 30  # Groq is fast, 30s is generous
+        self.timeout = 60  # Increased timeout to handle server-side issues
         
         # Generation settings
         self.default_options = {
@@ -123,8 +123,8 @@ class GroqClient:
             try:
                 error_detail = e.response.json()
                 error_msg = error_detail.get('error', {}).get('message', str(e))
-            except:
-                pass
+            except (json.JSONDecodeError, AttributeError) as parse_error:
+                print(f"Warning: Failed to parse error response: {parse_error}")
             return {
                 'response': '',
                 'generation_time': round(elapsed, 2),

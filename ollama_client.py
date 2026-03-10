@@ -34,7 +34,7 @@ class OllamaClient:
             'num_thread': 8          # Use all P-cores of i5 13th gen
         }
         
-        self.timeout = 45  # 45s is plenty for qwen2.5:3b
+        self.timeout = 120  # Increased timeout for local model processing
         
     def generate(self, prompt: str, options: Optional[Dict] = None) -> Dict[str, Any]:
         """

@@ -3,42 +3,51 @@ Speed-Optimized Prompt Templates for Curriculum Generation
 Key: Shorter prompts = faster responses (target: <200 words)
 """
 
-def build_structure_prompt(skill: str, level: str, semesters: int, hours: str, industry: str = "") -> str:
+import json
+
+def build_structure_prompt(skill: str, level: str, semesters: int, hours: str, industry: str = "", courses_per_sem: int = 3, custom_settings: dict = None) -> str:
     """
     Build optimized prompt for curriculum structure generation.
-    
-    OPTIMIZATION STRATEGY:
-    - Concise instructions (<200 words)
-    - JSON format requirement (faster to parse)
-    - One-shot example (reduces back-and-forth)
-    - Pre-calculated structure (don't ask AI to decide)
     """
-    
-    courses_per_sem = 3  # Groq is fast enough for 3 courses/semester
+    if custom_settings is None:
+        custom_settings = {}
+        
     total_courses = semesters * courses_per_sem
-    
     industry_note = f", {industry} focus" if industry else ""
     
-    # Build semester structure examples to make the requirement crystal clear
+    # Extract advanced settings
+    academic_system = custom_settings.get('academicSystem', 'semester')
+    difficulty = custom_settings.get('difficultyLevel', 'intermediate')
+    learning_style = custom_settings.get('learningStyle', 'practical')
+    prerequisites = custom_settings.get('prerequisites', 'assume')
+    cert_focus = custom_settings.get('certFocus', True)
+    project_focus = custom_settings.get('projectFocus', True)
+    
+    # Build semester structure examples
     semester_examples = []
-    for sem_num in range(1, min(semesters + 1, 3)):  # Show first 2 semesters as examples
+    for sem_num in range(1, min(semesters + 1, 3)):
         semester_examples.append(f"""    {{
       "semester": {sem_num},
       "subjects": [
-        {{"name": "Course Name", "code": "SKL{sem_num}01", "credits": 3, "hours_per_week": 4, "description": "Brief description", "topics": ["Topic1", "Topic2"]}},
-        {{"name": "Advanced Course", "code": "SKL{sem_num}02", "credits": 4, "hours_per_week": 5, "description": "Brief description", "topics": ["Topic1", "Topic2"]}}
+        {{"name": "Course Name", "code": "SKL{sem_num}01", "credits": 3, "hours_per_week": 4, "description": "Brief description", "topics": ["Topic1", "Topic2"], "skills": ["Skill A", "Skill B", "Skill C"]}},
+        ... ({courses_per_sem} courses total)
       ]
     }}""")
     
-    # Add ellipsis if more than 2 semesters
     if semesters > 2:
-        semester_examples.append(f"""    ... (continue through semester {semesters})""")
+        semester_examples.append(f"""    ... (continue through {academic_system} {semesters})""")
     
     semester_structure = ",\n".join(semester_examples)
     
-    prompt = f"""Generate a {level} curriculum for "{skill}"{industry_note}.
+    prompt = f"""Generate a {level} curriculum for "{skill}"{industry_note} using the {academic_system} system.
 
-CRITICAL REQUIREMENT: Generate EXACTLY {semesters} semesters, {courses_per_sem} courses per semester, {hours} hours/week.
+CRITICAL PARAMETERS:
+- Difficulty: {difficulty}
+- Learning Style: {learning_style}
+- Prerequisites: {prerequisites}
+- Certification Focus: {"Yes" if cert_focus else "No"}
+- Project Focus: {"Yes" if project_focus else "No"}
+- Structure: {semesters} {academic_system}s, {courses_per_sem} courses/{academic_system}, {hours} total hours/week.
 
 Respond with ONLY valid JSON (no markdown, no explanation):
 {{
@@ -49,15 +58,13 @@ Respond with ONLY valid JSON (no markdown, no explanation):
 }}
 
 MANDATORY RULES:
-- Generate EXACTLY {semesters} semesters (NOT 8, NOT 4, EXACTLY {semesters}!)
-- Each semester must have EXACTLY {courses_per_sem} courses
+- Generate EXACTLY {semesters} {academic_system}s
+- Each {academic_system} must have EXACTLY {courses_per_sem} courses
 - Total courses: {total_courses}
-- Include all semesters from 1 to {semesters}
-- Each subject needs: name, code, credits (3-4 based on complexity), hours_per_week (4-6), description (8 words max), topics (2 items)
-- Vary credits: foundational courses = 3 credits, advanced/major courses = 4 credits
-- Vary hours: lighter courses = 4-5 hours/week, intensive courses = 5-6 hours/week
-- Progressive difficulty across semesters
-- Unique realistic course codes"""
+- Each subject needs: name, code, credits (3-4), hours_per_week (4-6), description (8 words max), topics (2 items), skills (3 key skills students will gain)
+- Progressive difficulty: starts at {difficulty} level and advances
+- Skills should show clear progression across semesters (fundamentals first, advanced later)
+- Realistic unique course codes"""
     
     return prompt
 
@@ -121,12 +128,6 @@ One clear sentence about what students will learn.
 - **Weeks 13-15:** Unit 5 - [Topic area]
 - **Week 16:** Final project presentations
 
-## ✅ Assessment
-- **Assignments:** 30%
-- **Mid-term Exam:** 25%
-- **Final Project:** 35%
-- **Class Participation:** 10%
-
 ## 💡 Capstone Project Ideas
 Suggest 3-4 practical project ideas that students can work on:
 - **Project 1:** [Project title] - [Brief description of what students will build and technologies/concepts used]
@@ -138,11 +139,11 @@ Make projects relevant to real-world applications and include specific technolog
 
 ## 🏆 Industry Certifications
 Suggest 2-3 relevant industry certifications that align with this course:
-- **Certification Name:** [Provider] - [Brief description of alignment]
-- **Certification Name:** [Provider] - [Brief description of alignment]
-- **Certification Name:** [Provider] - [Brief description of alignment]
+- **Certification Name** — Provider — Brief description of alignment
+- **Certification Name** — Provider — Brief description of alignment
+- **Certification Name** — Provider — Brief description of alignment
 
-Examples: AWS Certified Solutions Architect, Google Cloud Professional, Microsoft Azure Administrator, CompTIA Security+, Oracle Certified Professional, Cisco CCNA, etc.
+Use ONLY real, well-known certifications. Examples: AWS Certified Solutions Architect, Google Cloud Professional, Microsoft Azure Administrator, CompTIA Security+, Cisco CCNA, Oracle Certified Professional, etc. Do NOT include URLs.
 
 IMPORTANT: Complete ALL sections fully. Include 5 units with specific week allocations."""
     
@@ -154,3 +155,37 @@ def validate_prompt_length(prompt: str, max_words: int = 200) -> bool:
     """Ensure prompts stay under word limit for speed."""
     word_count = len(prompt.split())
     return word_count <= max_words
+
+
+def build_chat_prompt(user_message: str, context: dict = None) -> str:
+    """
+    Build optimized prompt for chatbot responses about curriculum generation.
+    """
+    if context is None:
+        context = {}
+    
+    current_program = context.get('program', 'unknown program')
+    current_level = context.get('level', 'unknown level')
+    custom_settings = context.get('custom_settings', {})
+    
+    context_info = f"\n\nCURRENT CONTEXT:\nProgram: {current_program}\nLevel: {current_level}"
+    if custom_settings:
+        context_info += f"\nSettings: {json.dumps(custom_settings)}"
+    
+    if context.get('curriculum_data'):
+        context_info += "\nUser is working on a generated curriculum."
+    
+    prompt = f"""You are an expert educational consultant and curriculum advisor. You help users with:
+- Curriculum design and course selection
+- Learning path recommendations  
+- Educational concepts and explanations
+- Study strategies and career advice
+- Technical skills development
+
+Be helpful, concise, and practical. Support the user's specific goals.
+
+USER QUESTION: {user_message}{context_info}
+
+RESPONSE:"""
+    
+    return prompt
